@@ -22,7 +22,7 @@ private static PhoneDAO instance;
         }
         return instance;
     }
-	public List<Phone> GetListDrink() {
+	public List<Phone> GetListphone() {
         List<Phone> list = new ArrayList<Phone>();
         Connection con = ConnectionDB.openConnection();
         try {

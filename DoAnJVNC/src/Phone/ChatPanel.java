@@ -28,7 +28,7 @@ public class ChatPanel extends JPanel {
 	/**
 	 * Create the panel.
 	 */
-	public ChatPanel(Socket s, final String sender, String receiver) {
+	public ChatPanel(Socket s, String sender, String receiver) {
 		setLayout(new BorderLayout(0, 0));
 		
 		JPanel panel = new JPanel();
@@ -39,7 +39,7 @@ public class ChatPanel extends JPanel {
 		JScrollPane scrollPane = new JScrollPane();
 		panel.add(scrollPane);
 		
-		final JTextArea txtMessage = new JTextArea();
+		JTextArea txtMessage = new JTextArea();
 		scrollPane.setViewportView(txtMessage);
 		
 		JButton btbSend = new JButton("Send");
@@ -55,8 +55,6 @@ public class ChatPanel extends JPanel {
 				} catch (Exception ex) {
 					ex.printStackTrace();
 				}
-				
-				
 			}
 		});
 		panel.add(btbSend);
@@ -73,7 +71,7 @@ public class ChatPanel extends JPanel {
 		try {
 			bf= new BufferedReader(new InputStreamReader(socket.getInputStream()));
 			os = new DataOutputStream(socket.getOutputStream());
-			t = new OutPutThread(s, txtMessages, sender, receiver);
+			t = new OutPutThread(socket, txtMessages, sender, receiver);
 			t.start();
 			
 		} catch (Exception e) {

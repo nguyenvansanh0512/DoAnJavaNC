@@ -4,7 +4,6 @@ public class AccountKH {
 	private int id;
     private String username;
     private String password;
-    private String name;
 
     public AccountKH() {
     }

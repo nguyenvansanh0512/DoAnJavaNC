@@ -6,6 +6,11 @@ import javax.swing.border.*;
 import java.awt.*;
 import javax.xml.parsers.*;
 import org.w3c.dom.*;
+
+import DTO.AccountKH;
+import DataBase.AccountDAO;
+import DataBase.AccountKHDAO;
+
 import java.awt.event.*;
 import java.io.*;
 import java.net.*;
@@ -23,16 +28,12 @@ public class Dash extends JFrame {
 	private JLabel lbngay;
 	private JTextArea textAreatong;
 	private JTextArea textArea;
-	private JTextArea textAreaTKH;
-	private static JTextArea textAreachat;
 	private Panel panechat;
-	private static JTextField tfchat;
 
-	private ServerSocket serversocket;
-	private Socket socket;
-	private BufferedReader Input;
-	private PrintWriter Output;
-	private DataOutputStream os;
+	private Socket socket = null;
+	private BufferedReader in = null;
+	private PrintWriter out;
+	private DataOutputStream os = null;
 	
 
 	private static File xmlFile;
@@ -41,6 +42,8 @@ public class Dash extends JFrame {
 	private static Document doc;
 	private static NodeList nodeList;
 	private static String name;
+	private String host = "localhost";
+	private int post = 12345;
 
 	int x = 0;
 	private int total = 0;
@@ -64,8 +67,6 @@ public class Dash extends JFrame {
 		setBounds(100, 100, 1415, 879);
 		contentPane = new JPanel();
 		contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
-
-		JPanel chatPanel = createChatPanel();
 
 		setContentPane(contentPane);
 		contentPane.setLayout(null);
@@ -91,15 +92,6 @@ public class Dash extends JFrame {
 		jtxdate.setFont(new Font("Times New Roman", Font.BOLD, 16));
 		jtxdate.setBounds(1235, 0, 219, 33);
 		panel.add(jtxdate);
-
-		// JButton btnmess = new JButton("");
-		// btnmess.setBounds(14, 11, 55, 37);
-		// panel.add(btnmess);
-		// ImageIcon iconlbanh = new
-		// ImageIcon(Dash.class.getResource("/img/logomess.png"));
-		// Image imganh = iconlbanh.getImage().getScaledInstance(35, 35,
-		// Image.SCALE_SMOOTH);
-		// btnmess.setIcon(new ImageIcon(imganh));
 
 		JPanel panel_1 = new JPanel();
 		panel_1.setForeground(SystemColor.activeCaptionBorder);
@@ -933,10 +925,6 @@ public class Dash extends JFrame {
 		});
 		tongTienThread.start();
 		panel_24.setLayout(null);
-
-		JLayeredPane layeredPane = new JLayeredPane();
-		layeredPane.setBounds(20, 375, 308, 384);
-		panel_24.add(layeredPane);
 		
 		JTextArea textAreaBill = new JTextArea();
 		textAreaBill.setBounds(10, 429, 318, 323);
@@ -1228,85 +1216,12 @@ public class Dash extends JFrame {
 		btnNewButton_2_9.setIcon(new ImageIcon(imgBtnNewButton_2_9));
 
 		panel_2_9.add(btnNewButton_2_9);
-		JFrame thisFrame = this;
-
-		// JLabel lbanh = new JLabel();
-		// lbanh.addMouseListener(new MouseAdapter() {
-		// @Override
-		// public void mouseClicked(MouseEvent e) {
-		// Person p = new Person();
-		// p.informationXML();
-		// String staffName = p.getName();
-		// try {
-		// socket = new Socket("localhost", 12345);
-		// if(socket !=null) {
-		// ChatPanelKH cp = new ChatPanelKH(socket, staffName, "Manager");
-		// thisFrame.getContentPane().add(cp);
-		// cp.gettextareaMessage().append("Manager is running ");
-		// cp.updateUI();
-		//
-		// bf=new BufferedReader(new InputStreamReader(socket.getInputStream()));
-		// os = new DataOutputStream(socket.getOutputStream());
-		//
-		// os.writeBytes("Staff:" + staffName);
-		// os.write(13); os.write(10);
-		// os.flush();
-		//
-		// }
-		// } catch (Exception e2) {
-		// // TODO: handle exception
-		// }
-		//// showChatPanel(contentPane);
-		//// chatPanel.setVisible(true);
-		// }
-		// });
-		// lbanh.setBounds(1446, 11, 55, 37);
-		// panel_1.add(lbanh);
-		// ImageIcon iconlbanh = new
-		// ImageIcon(Dash.class.getResource("/img/logomess.png"));
-		// Image imganh = iconlbanh.getImage().getScaledInstance(35, 35,
-		// Image.SCALE_SMOOTH);
-		//
-		// lbanh.setIcon(new ImageIcon(imganh));
-
-		contentPane.add(chatPanel, BorderLayout.CENTER);
-		contentPane.add(chatPanel, BorderLayout.PAGE_END);
-
-		textAreaTKH = new JTextArea();
-		textAreaTKH.setFont(new Font("Times New Roman", Font.BOLD, 20));
-		textAreaTKH.setBounds(108, 18, 164, 22);
-		panel_1.add(textAreaTKH);
-
-		Person p = new Person();
-		p.setNameToTextAreaTKH(textAreaTKH);
 
 		JButton btnmess = new JButton("");
 		btnmess.addActionListener(new ActionListener() {
-			private boolean chatPanelVisible = false;
 			public void actionPerformed(ActionEvent e) {
-				showChatPanel(contentPane);
-				chatPanel.setVisible(true);
-				Person p = new Person();
-//				p.informationKHXML();
-//				p.sendImformation(socket);-
-				// Person p = new Person();
-				// p.informationXML();
-				// String staffName = p.getName();
-				// try {
-				// socket = new Socket("localhost", 12345);
-				// ChatPanelKH cp = new ChatPanelKH(socket, staffName, "Manager");
-				// contentPane.add(cp);
-				//
-				// bf = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-				// os = new DataOutputStream(socket.getOutputStream());
-				//
-				// os.writeBytes("Staff:" + staffName);
-				// os.write(13); os.write(10);
-				// os.flush();
-				// }
-				// catch (IOException ex) {
-				// ex.printStackTrace();
-				// }
+				chat chat = new chat();
+				chat.show();
 			}
 		});
 
@@ -1349,139 +1264,6 @@ public class Dash extends JFrame {
 		lbngay.setText(dateStr);
 	}
 
-	// private void informationXML() {
-	// try {
-	// xmlFile = new File("imformation.xml");
-	// dbFactory = DocumentBuilderFactory.newInstance();
-	// dBuilder = dbFactory.newDocumentBuilder();
-	// doc = dBuilder.parse(xmlFile);
-	// doc.getDocumentElement().normalize();
-	//
-	// nodeList = doc.getElementsByTagName("name");
-	// if (nodeList.getLength() > 0) {
-	// Node node = nodeList.item(0);
-	// if (node.getNodeType() == Node.ELEMENT_NODE) {
-	// Element element = (Element) node;
-	// String name = element.getTextContent();
-	// textAreaTKH.append("Xin chào! " + name);
-	// }
-	// }
-	// } catch (Exception e) {
-	// e.printStackTrace();
-	// }
-	// }
-
-	public void showChatPanel(JPanel mainPanel) {
-        JLayeredPane layeredPane = mainPanel.getRootPane().getLayeredPane();
-
-        JPanel chatPanel = createChatPanel();
-        chatPanel.setBounds(1120, 455, 278, 384);
-        layeredPane.add(chatPanel, JLayeredPane.PALETTE_LAYER);
-
-        chatPanel.setVisible(true);
-    }
-
-    private JPanel createChatPanel() {
-        JPanel chatPanel = new JPanel();
-        chatPanel.setBorder(new EtchedBorder(EtchedBorder.LOWERED, null, null));
-        chatPanel.setBounds(63, 10, 278, 384);
-        chatPanel.setLayout(null);
-
-        JLabel lblNewLabel = new JLabel(" Tư vấn khách hàng");
-        lblNewLabel.setFont(new Font("Times New Roman", Font.BOLD, 20));
-        lblNewLabel.setBounds(0, 0, 207, 28);
-        chatPanel.add(lblNewLabel);
-
-        JLabel dongchat = new JLabel("");
-        dongchat.addMouseListener(new MouseAdapter() {
-            @Override
-            public void mouseClicked(MouseEvent e) {
-                chatPanel.setVisible(false);
-                closeSocket();
-            }
-        });
-        dongchat.setIcon(new ImageIcon("C:\\Users\\sanh6\\Downloads\\close.png"));
-        dongchat.setBounds(244, 2, 34, 26);
-        chatPanel.add(dongchat);
-
-        textAreachat = new JTextArea();
-        textAreachat.setBounds(2, 32, 274, 320);
-        chatPanel.add(textAreachat);
-
-        tfchat = new JTextField();
-        tfchat.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sendMessage(tfchat.getText());
-            }
-        });
-        tfchat.setBounds(0, 353, 207, 31);
-        chatPanel.add(tfchat);
-        tfchat.setColumns(10);
-
-        JButton btnSend = new JButton("Send");
-        btnSend.addActionListener(new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                sendMessage(tfchat.getText());
-            }
-        });
-        btnSend.setFont(new Font("Times New Roman", Font.BOLD, 15));
-        btnSend.setBounds(204, 353, 74, 31);
-        chatPanel.add(btnSend);
-
-        // Khởi tạo kết nối socket ở đây, nếu chưa được khởi tạo
-        if (socket == null || socket.isClosed()) {
-
-        }
-
-        return chatPanel;
-    }
-
-    private void initializeSocket() {
-        try {
-            Input = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-            Output = new PrintWriter(socket.getOutputStream(), true);
-
-            // Tạo luồng riêng để đọc tin nhắn từ server
-            new Thread(new Runnable() {
-                @Override
-                public void run() {
-                    String inputLine;
-                    try {
-                        while ((inputLine = Input.readLine()) != null) {
-                            Person p = new Person();
-							p.informationNVXML();
-							p.setNameToTextAreaChat(textAreachat, inputLine);
-                        }
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-                }
-            }).start();
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void closeSocket() {
-        try {
-            if (socket != null && !socket.isClosed()) {
-                socket.close();
-            }
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
-    }
-
-    private void sendMessage(String message) {
-        Person p = new Person();
-        p.informationKHXML();
-        p.setNameToTextAreaChat(textAreachat, message);
-        Output.println(message);
-        tfchat.setText("");
-    }
-
 	public static void start() {
 		// TODO Auto-generated method stub
 		throw new UnsupportedOperationException("Unimplemented method 'start'");
@@ -1498,4 +1280,5 @@ public class Dash extends JFrame {
 	            Integer.toString(ll)+"đ" +"\n"+"\tCảm ơn quý khách. Hẹn gặp lại!";
 
 	    return cc;
-	}}
+	}	
+}

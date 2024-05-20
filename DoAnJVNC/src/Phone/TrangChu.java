@@ -7,6 +7,10 @@ import javax.swing.JPanel;
 import javax.swing.border.EmptyBorder;
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
+import javax.xml.transform.Transformer;
+import javax.xml.transform.TransformerFactory;
+import javax.xml.transform.dom.DOMSource;
+import javax.xml.transform.stream.StreamResult;
 
 import org.w3c.dom.Document;
 import org.w3c.dom.Element;
@@ -51,6 +55,7 @@ import javax.swing.ImageIcon;
 import javax.swing.JSeparator;
 import javax.swing.JSpinner;
 import javax.swing.JComboBox;
+import javax.swing.JDialog;
 import javax.swing.DefaultComboBoxModel;
 import java.awt.event.ActionListener;
 import java.awt.event.ActionEvent;
@@ -65,7 +70,6 @@ public class TrangChu extends JFrame implements Runnable {
 	private JTabbedPane tabbedPane;
 
 	private ServerSocket serversocket;
-	private Socket socket;
 	private BufferedReader in;
 	private PrintWriter out;
 	private Thread t;
@@ -87,7 +91,7 @@ public class TrangChu extends JFrame implements Runnable {
 	private Statement stmt = null;
 	private ResultSet rs = null;
 
-	private int port = 12345;
+	
 
 	/**
 	 * Launch the application.
@@ -240,8 +244,7 @@ public class TrangChu extends JFrame implements Runnable {
 					String day = txtngay.getText();
 					int quantity = Integer.parseInt(txtsl.getText());
 
-					String checkQuery = "SELECT * FROM phone WHERE name = '" + phoneName + "' AND price = " + price
-							+ " AND day = '" + day + "'";
+					String checkQuery = "SELECT * FROM phone WHERE name = '" + phoneName + "' AND price = " + price;
 					rs = stmt.executeQuery(checkQuery);
 
 					if (rs.next()) {
@@ -382,7 +385,7 @@ public class TrangChu extends JFrame implements Runnable {
 			public void mouseClicked(MouseEvent e) {
 				int row = table_phone.getSelectedRow();
 				con = ConnectionDB.openConnection();
-				List<Phone> list = PhoneDAO.getInstance().GetListDrink();
+				List<Phone> list = PhoneDAO.getInstance().GetListphone();
 				idSave = list.get(row).getId();
 				txttensp.setText(table_phone.getValueAt(row, 1) + "");
 				txtgia.setText(table_phone.getValueAt(row, 2) + "");
@@ -428,8 +431,7 @@ public class TrangChu extends JFrame implements Runnable {
 					JOptionPane.showMessageDialog(null, "Bạn không có quyền truy cập chức năng này!");
 					return;
 				}
-				Sign_up_nv sign_up_nv = new Sign_up_nv();
-				sign_up_nv.setVisible(true);
+				sign_up_nv();
 			}
 		});
 		lblNewLabel_9.setForeground(Color.WHITE);
@@ -553,38 +555,50 @@ public class TrangChu extends JFrame implements Runnable {
 		lblNewLabel_6.setBounds(10, 23, 125, 42);
 		panel_1.add(lblNewLabel_6);
 
-		// Person p = new Person();
-		//// p.informationNVXML();
-		//
-		// this.setSize(1432, 876);
-		try {
+		
+		 this.setSize(1432, 876);
+		 try {
 			serversocket = new ServerSocket(12345);
-		} catch (IOException e1) {
+		} catch (IOException e) {
 			// TODO Auto-generated catch block
-			e1.printStackTrace();
+			e.printStackTrace();
+
 		}
-		// t = new Thread(this);
-		// t.start();
-		setLocationRelativeTo(null);
-		getInformation();
+		 t = new Thread(this);
+		 t.start();
+		
+
 	}
 
 	public void run() {
 		while (true) {
 			try {
-				socket = serversocket.accept();
+				Socket socket = serversocket.accept();
 				if (socket != null) {
 					in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 					String S = in.readLine();
+					if ("LOGIN".equals(S)) {
+						String username = in.readLine();
+						String password = in.readLine();
+						
+						saveInformation(username, password);
+					}
+					else {
 					int pos = S.indexOf(":");
-					String staffName = S.substring(pos + 1);
+					String staffName = S.substring(pos+1);
 					ChatPanel p = new ChatPanel(socket, "Manager", staffName);
 					tabbedPane.add(staffName, p);
 					p.updateUI();
+					}
 				}
+				
 				Thread.sleep(100);
 			} catch (Exception e) {
+
+				
 				e.printStackTrace();
+
+
 			}
 		}
 	}
@@ -602,38 +616,136 @@ public class TrangChu extends JFrame implements Runnable {
 
 	private void displayTable() {
 		tableModel_phone.setRowCount(0);
-		List<Phone> list = PhoneDAO.getInstance().GetListDrink();
+		List<Phone> list = PhoneDAO.getInstance().GetListphone();
 		for (int i = 0; i < list.size(); i++) {
 			Phone phone = list.get(i);
 			Object[] dt = { i + 1, phone.getName(), phone.getPrice(), phone.getDay(), phone.getQuantity() };
 			tableModel_phone.addRow(dt);
 		}
 	}
-
-	public void getInformation() {
-		try {
-			socket = serversocket.accept();
-			in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
-			String requestType = in.readLine();
-			if ("LOGIN".equals(requestType)) {
-				String username = in.readLine();
-				String password = in.readLine();
-
-				saveInformation(username, password);
-			}
-		} catch (IOException e) {
-			e.printStackTrace();
+	
+	private void displayTable_nv() {
+		tableModel_nv.setRowCount(0);
+		List<Account> list = AccountDAO.getInstance().listAccount();
+		for (int i = 0; i < list.size(); i++) {
+			Account account = list.get(i);
+			Object[] dt = { i + 1, account.getName(), account.getUsername()};
+			tableModel_nv.addRow(dt);
 		}
 	}
+	
+	private void sign_up_nv() {
+        // Tạo JDialog cho giao diện con
+        JDialog childDialog = new JDialog(this, true);
+        childDialog.setSize(512, 393);
+        childDialog.setLocationRelativeTo(this);
+        JPanel contentPane = new JPanel();
+        contentPane.setBorder(new EmptyBorder(5, 5, 5, 5));
+        childDialog.setContentPane(contentPane);
+        contentPane.setLayout(null);
+
+        JLabel lblNewLabel = new JLabel("Quản lý tài khoản (Con)");
+        lblNewLabel.setFont(new Font("Segoe UI", Font.BOLD, 24));
+        lblNewLabel.setBounds(147, 23, 217, 37);
+        contentPane.add(lblNewLabel);
+
+        JLabel lblNewLabel_1 = new JLabel("Tên hiển thị:");
+        lblNewLabel_1.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        lblNewLabel_1.setBounds(89, 88, 89, 23);
+        contentPane.add(lblNewLabel_1);
+
+        JTextField txtName = new JTextField();
+        txtName.setBounds(216, 91, 196, 20);
+        contentPane.add(txtName);
+        txtName.setColumns(10);
+
+        JTextField txtUsername = new JTextField();
+        txtUsername.setBounds(216, 141, 196, 20);
+        contentPane.add(txtUsername);
+        txtUsername.setColumns(10);
+
+        JTextField txtPass = new JTextField();
+        txtPass.setBounds(216, 190, 196, 20);
+        contentPane.add(txtPass);
+        txtPass.setColumns(10);
+
+        JTextField txtRePass = new JTextField();
+        txtRePass.setBounds(216, 243, 196, 20);
+        contentPane.add(txtRePass);
+        txtRePass.setColumns(10);
+
+        JLabel lblNewLabel_1_1 = new JLabel("Tên đăng nhập:");
+        lblNewLabel_1_1.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        lblNewLabel_1_1.setBounds(89, 138, 109, 23);
+        contentPane.add(lblNewLabel_1_1);
+
+        JLabel lblNewLabel_1_2 = new JLabel("Mật khẩu:");
+        lblNewLabel_1_2.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        lblNewLabel_1_2.setBounds(89, 187, 89, 23);
+        contentPane.add(lblNewLabel_1_2);
+
+        JLabel lblNewLabel_1_3 = new JLabel("Nhập lại mật khẩu:");
+        lblNewLabel_1_3.setFont(new Font("Tahoma", Font.PLAIN, 14));
+        lblNewLabel_1_3.setBounds(89, 240, 122, 23);
+        contentPane.add(lblNewLabel_1_3);
+
+        JButton btnNewButton = new JButton("Đăng kí");
+        btnNewButton.addActionListener(new ActionListener() {
+            public void actionPerformed(ActionEvent e) {
+                if (txtName.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Chưa nhập tên!");
+                    return;
+                }
+                if (txtUsername.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Chưa nhập tài khoản!");
+                    return;
+                }
+                if (txtPass.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Chưa nhập mật khẩu!");
+                    return;
+                }
+                if (txtRePass.getText().isEmpty()) {
+                    JOptionPane.showMessageDialog(null, "Chưa nhập xác nhận mật khẩu!");
+                    return;
+                }
+                if (!txtPass.getText().equals(txtRePass.getText())) {
+                    JOptionPane.showMessageDialog(null, "Xác nhận mật khẩu chưa chính xác!");
+                    return;
+                }
+
+                if (AccountDAO.getInstance().Add(txtName.getText(), txtUsername.getText(), txtPass.getText())) {
+                    JOptionPane.showMessageDialog(null, "Thêm mới thành công!!");
+                    displayTable_nv();
+                    childDialog.dispose();
+                } else {
+                    JOptionPane.showMessageDialog(null, "Lỗi!!");
+                }
+            }
+        });
+        btnNewButton.setFont(new Font("Segoe UI", Font.BOLD, 20));
+        btnNewButton.setBounds(187, 295, 122, 37);
+        contentPane.add(btnNewButton);
+
+        childDialog.setVisible(true);
+    }
 
 	private void saveInformation(String username, String password) {
+		String insertSQL = "INSERT INTO `accountkh` (`username`, `password`) VALUES (?, ?)";
 		try {
 			con = ConnectionDB.openConnection();
-			pstmt = con.prepareStatement("INSERT INTO accountkh (username, password) VALUES (?, ?)");
+			
+			pstmt = con.prepareStatement(insertSQL);
 
 			pstmt.setString(1, username);
 			pstmt.setString(2, password);
-		} catch (SQLException e) {
+			int i = pstmt.executeUpdate();
+            if (i > 0) {
+            	System.out.println("Thông tin tài khoản đã được lưu vào CSDL.");
+            }
+            else {
+                System.out.println("Lưu thông tin tài khoản không thành công.");
+            }
+		}catch(SQLException e) {
 			e.printStackTrace();
 		}
 	}

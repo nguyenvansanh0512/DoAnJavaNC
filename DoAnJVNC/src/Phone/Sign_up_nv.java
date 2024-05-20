@@ -95,7 +95,7 @@ public class Sign_up_nv extends JFrame {
 
 		        if (AccountDAO.getInstance().Add(txtName.getText(), txtUsername.getText(), txtPass.getText())) {
 		            JOptionPane.showMessageDialog(null, "Thêm mới thành công!!");
-
+		            dispose();
 		        } else {
 		            JOptionPane.showMessageDialog(null, "Lỗi!!");
 		        }
