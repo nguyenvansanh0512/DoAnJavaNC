@@ -20,6 +20,7 @@ import org.w3c.dom.NodeList;
 import DTO.Account;
 import DTO.Phone;
 import DataBase.AccountDAO;
+import DataBase.AccountKHDAO;
 import DataBase.ConnectionDB;
 import DataBase.PhoneDAO;
 
@@ -576,16 +577,30 @@ public class TrangChu extends JFrame implements Runnable {
 				Socket socket = serversocket.accept();
 				if (socket != null) {
 					in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+					out = new PrintWriter(socket.getOutputStream(), true);
 					String S = in.readLine();
-					if ("LOGIN".equals(S)) {
+					if ("SIGN".equals(S)) {
 						String username = in.readLine();
 						String password = in.readLine();
 						
 						saveInformation(username, password);
 					}
-					else {
+					if("LOGIN".equals(S)){
+						String username = in.readLine();
+						String password = in.readLine();
+
+						if (!AccountKHDAO.getInstance().Login(username, password)) {
+							out.println("Không thành công");
+							return;
+						}
+						else{
+							out.println(username);
+							out.println(password);
+						}
+					}
+					else{
 					int pos = S.indexOf(":");
-					String staffName = S.substring(pos+1);
+					String staffName = AccountKHDAO.getInstance().GetAccountKH().getUsername();
 					ChatPanel p = new ChatPanel(socket, "Manager", staffName);
 					tabbedPane.add(staffName, p);
 					p.updateUI();

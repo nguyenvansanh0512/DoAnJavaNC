@@ -18,13 +18,13 @@ public class chat extends JFrame {
 
 	private static final long serialVersionUID = 1L;
 	private JPanel contentPane;
-	
+
 	private Socket socket = null;
 	private BufferedReader bf = null;
 	private DataOutputStream os = null;
-	
+
 	private String host = "localhost";
-	private int port =12345;
+	private int port = 12345;
 
 	/**
 	 * Launch the application.
@@ -55,23 +55,23 @@ public class chat extends JFrame {
 		contentPane.setLayout(new BorderLayout());
 		String name = AccountKHDAO.getInstance().GetAccountKH().getUsername();
 		try {
-			socket= new Socket(host, port);
-			
-			if(socket !=null) {
-				ChatPanel p = new ChatPanel(socket, name , "Nhân viên tư vấn");
+			socket = new Socket(host, port);
+
+			if (socket != null) {
+				ChatPanel p = new ChatPanel(socket, name, "Nhân viên tư vấn");
 				contentPane.add(p, BorderLayout.CENTER);
 				p.updateUI();
-				
-				bf=new BufferedReader(new InputStreamReader(socket.getInputStream()));
+
+				bf = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 				os = new DataOutputStream(socket.getOutputStream());
-				
+
 				os.writeBytes("Staff:" + name);
-				os.write(13); os.write(10);
+				os.write(13);
+				os.write(10);
 				os.flush();
-				
 			}
 		} catch (Exception ex) {
-		ex.printStackTrace();
+			ex.printStackTrace();
 		}
 	}
 

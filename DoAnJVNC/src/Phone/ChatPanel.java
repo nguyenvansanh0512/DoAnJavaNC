@@ -1,4 +1,5 @@
 package Phone;
+
 import javax.swing.JPanel;
 import java.awt.BorderLayout;
 import javax.swing.border.TitledBorder;
@@ -47,7 +48,7 @@ public class ChatPanel extends JPanel {
 			public void actionPerformed(ActionEvent e) {
 				if(txtMessage.getText().trim().length()==0) return;
 				try {
-					os.writeBytes(txtMessage.getText());
+					os.writeUTF(txtMessage.getText());
 					os.write(13); os.write(10);
 					os.flush();
 					txtMessage.append("\n" + sender + ":" + txtMessage.getText());
@@ -69,9 +70,9 @@ public class ChatPanel extends JPanel {
 		this.sender = sender;
 		this.receiver= receiver;
 		try {
-			bf= new BufferedReader(new InputStreamReader(socket.getInputStream()));
+			bf= new BufferedReader(new InputStreamReader(socket.getInputStream(), "UTF-8"));
 			os = new DataOutputStream(socket.getOutputStream());
-			t = new OutPutThread(socket, txtMessages, sender, receiver);
+			t = new OutPutThread(s, txtMessages, sender, receiver);
 			t.start();
 			
 		} catch (Exception e) {

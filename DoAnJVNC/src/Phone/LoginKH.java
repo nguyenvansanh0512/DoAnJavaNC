@@ -75,6 +75,16 @@ public class LoginKH extends JFrame {
      * Create the frame.
      */
     public LoginKH() {
+
+        try {
+            socket = new Socket(host, port);
+        } catch (UnknownHostException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        } catch (IOException e) {
+            // TODO Auto-generated catch block
+            e.printStackTrace();
+        }
         setTitle("Đăng nhập");
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLocationRelativeTo(null);
@@ -100,7 +110,31 @@ public class LoginKH extends JFrame {
         JButton btsignin = new JButton("Sign in");
         btsignin.addActionListener(new ActionListener() {
             public void actionPerformed(ActionEvent e) {
-            	AuthenticateAndLogin();
+                String username = txtUsername.getText();
+                String password = txtPass.getText();
+                String hashpass = hashPassword(password);
+            	try {
+                    PrintWriter out = new PrintWriter(new OutputStreamWriter(socket.getOutputStream(), "UTF-8"), true);
+                    BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+    
+                    out.println("LOGIN");
+                    out.println(username);
+                    out.println(hashpass);
+
+    
+                    String name = in.readLine();
+                    String pass = in.readLine();
+
+                    if(username.equals(name)&&hashpass.equals(pass)){
+                        Dash r = new Dash();
+                        r.setVisible(true);
+                        dispose();
+                    }else{
+                        txtMessage.setText("Sai tên đăng nhập hoặc mật khẩu!!");
+                    }
+                } catch (IOException ex) {
+                    ex.printStackTrace();
+                }
             }
         });
         btsignin.setBackground(new Color(46, 139, 87));
@@ -155,12 +189,13 @@ public class LoginKH extends JFrame {
                 String username = txtUsername_sign.getText();
                 String password = txtPass_sign.getText();
                 String hashpass = hashPassword(password);
+
                 try {
-                    socket = new Socket(host, port);
+
                     PrintWriter out = new PrintWriter(socket.getOutputStream(), true);
                     BufferedReader in = new BufferedReader(new InputStreamReader(socket.getInputStream()));
 
-                    out.println("LOGIN");
+                    out.println("SIGN");
                     out.println(username);
                     out.println(hashpass);
 
@@ -250,25 +285,7 @@ public class LoginKH extends JFrame {
         }
     }
 
-    private void AuthenticateAndLogin() {
-    	String password = hashPassword(txtPass.getText());
-        if (txtUsername.getText().isEmpty()) {
-            txtMessage.setText("Bạn chưa nhập tên tài khoản!");
-            return;
-        }
-        if (password.isEmpty()) {
-            txtMessage.setText("Bạn chưa nhập mật khẩu!");
-            return;
-        }
-        if (!AccountKHDAO.getInstance().Login(txtUsername.getText(), password)) {
-            txtMessage.setText("Sai tên đăng nhập hoặc mật khẩu!!");
-            return;
-        }
-        Dash tc = new Dash();
-        tc.setVisible(true);
-        dispose();
-    }
-
+    
     private void saveToXML(String username, String password) {
 
         try {
